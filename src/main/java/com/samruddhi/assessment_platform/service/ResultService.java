@@ -17,7 +17,10 @@ import com.samruddhi.assessment_platform.repository.AssessmentRepository;
 import com.samruddhi.assessment_platform.repository.QuestionRepository;
 import com.samruddhi.assessment_platform.repository.ResultRepository;
 import com.samruddhi.assessment_platform.repository.UserRepository;
+import java.util.ArrayList;
 
+import com.samruddhi.assessment_platform.dto.QuestionAnalysisDto;
+import com.samruddhi.assessment_platform.dto.ResultResponseDto;
 @Service
 public class ResultService {
 
@@ -104,8 +107,9 @@ public class ResultService {
 
     }
 
-    // Submit Test
-    public Result submitTest(SubmitTestRequest request) {
+ 
+ // Submit Test
+    public ResultResponseDto submitTest(SubmitTestRequest request) {
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -117,23 +121,68 @@ public class ResultService {
                 questionRepository.findByAssessmentId(assessment.getId());
 
         int score = 0;
+        int attempted = 0;
+
+        List<QuestionAnalysisDto> analysisList = new ArrayList<>();
 
         for (Question question : questions) {
+
+            AnswerSubmission submittedAnswer = null;
 
             for (AnswerSubmission answer : request.getAnswers()) {
 
                 if (answer.getQuestionId().equals(question.getId())) {
 
-                    if (question.getCorrectAnswer()
-                            .equalsIgnoreCase(answer.getSelectedAnswer())) {
-
-                        score++;
-
-                    }
+                    submittedAnswer = answer;
+                    break;
 
                 }
 
             }
+
+            QuestionAnalysisDto analysis = new QuestionAnalysisDto();
+
+            analysis.setQuestionText(question.getQuestionText());
+
+            analysis.setCorrectAnswer(question.getCorrectAnswer());
+
+            analysis.setCorrectOption(
+                    getOptionText(question, question.getCorrectAnswer())
+            );
+
+            if (submittedAnswer != null &&
+                    submittedAnswer.getSelectedAnswer() != null &&
+                    !submittedAnswer.getSelectedAnswer().isBlank()) {
+
+                attempted++;
+
+                analysis.setSelectedAnswer(submittedAnswer.getSelectedAnswer());
+
+                analysis.setSelectedOption(
+                        getOptionText(question,
+                                submittedAnswer.getSelectedAnswer())
+                );
+
+                boolean correct = question.getCorrectAnswer()
+                        .equalsIgnoreCase(submittedAnswer.getSelectedAnswer());
+
+                analysis.setCorrect(correct);
+
+                if (correct) {
+
+                    score++;
+
+                }
+
+            } else {
+
+                analysis.setSelectedAnswer(null);
+                analysis.setSelectedOption(null);
+                analysis.setCorrect(false);
+
+            }
+
+            analysisList.add(analysis);
 
         }
 
@@ -144,8 +193,52 @@ public class ResultService {
         result.setScore(score);
         result.setSubmittedAt(LocalDateTime.now());
 
-        return resultRepository.save(result);
+        resultRepository.save(result);
 
+        int totalQuestions = questions.size();
+
+        int wrong = attempted - score;
+
+        double percentage = totalQuestions == 0
+                ? 0
+                : (score * 100.0) / totalQuestions;
+
+        ResultResponseDto response = new ResultResponseDto();
+
+        response.setScore(score);
+        response.setCorrect(score);
+        response.setWrong(wrong);
+        response.setAttempted(attempted);
+        response.setTotalQuestions(totalQuestions);
+        response.setPercentage(Math.round(percentage * 100.0) / 100.0);
+
+        response.setQuestionAnalysis(analysisList);
+
+        return response;
+    }
+    private String getOptionText(Question question, String option) {
+
+        if (option == null) {
+            return null;
+        }
+
+        switch (option.toUpperCase()) {
+
+            case "A":
+                return question.getOptionA();
+
+            case "B":
+                return question.getOptionB();
+
+            case "C":
+                return question.getOptionC();
+
+            case "D":
+                return question.getOptionD();
+
+            default:
+                return null;
+        }
     }
 
 }
