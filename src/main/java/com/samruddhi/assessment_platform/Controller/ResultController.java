@@ -9,10 +9,11 @@ import com.samruddhi.assessment_platform.dto.CandidateDashboardDto;
 import com.samruddhi.assessment_platform.dto.SubmitTestRequest;
 import com.samruddhi.assessment_platform.entity.Result;
 import com.samruddhi.assessment_platform.service.ResultService;
+import com.samruddhi.assessment_platform.dto.ResultResponseDto;
 
 @RestController
 @RequestMapping("/results")
-@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://localhost:3000")
 public class ResultController {
 
     @Autowired
@@ -28,12 +29,12 @@ public class ResultController {
 
     // Submit Test
     @PostMapping("/submit")
-    public Result submitTest(@RequestBody SubmitTestRequest request) {
+    public ResultResponseDto submitTest(@RequestBody SubmitTestRequest request) {
 
         return resultService.submitTest(request);
 
     }
-
+    
     // Get All Results (Admin)
     @GetMapping
     public List<Result> getAllResults() {

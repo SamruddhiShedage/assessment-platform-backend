@@ -9,7 +9,7 @@ import com.samruddhi.assessment_platform.entity.Assessment;
 import com.samruddhi.assessment_platform.service.AssessmentService;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/assessments")
 public class AssessmentController {
 

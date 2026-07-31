@@ -10,7 +10,7 @@ import com.samruddhi.assessment_platform.service.QuestionService;
 
 @RestController
 @RequestMapping("/questions")
-@CrossOrigin(origins = "http://localhost:3000")
+//@CrossOrigin(origins = "http://localhost:3000")
 public class QuestionController {
 
     @Autowired
